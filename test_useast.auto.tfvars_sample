@@ -1,0 +1,27 @@
+company_prefix     = "cts"
+location_prefix    = "aue1"
+environment_prefix = "prd"
+location           = "Australia East"
+workload_postfix   = "functionapp1"
+
+tags = {
+  CostCentre     = "1001"
+  Owner          = "sameera.perera@contosoau.com"
+  DeploymentType = "Terraform"
+  Application    = "Function App Testing"
+}
+
+subscription_id = "<SUBSCRIPTION_ID>"
+client_id = "<CLIENT_ID>"
+client_secret = "<CLIENT_SECRET>"
+tenant_id = "<TENANT_ID>"
+
+vnet_rg_name = "cts-aue1-prd-rg-spoke1"
+vnet_name = "cts-aue1-prd-vnet-spoke1"
+vnet_subnet_name = "server"
+vm_password = "<VM_PASSWORD>"
+
+dns_resource_group_name="cts-aue1-prd-rg-hub-network"
+
+vnet_private_endpoint_subnet_name = "endpoints"  # Name of the existing private endpoint subnet
+vnet_appservice_subnet_name = "appservice"  # Name of the existing app service subnet
