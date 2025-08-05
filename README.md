@@ -104,6 +104,8 @@ location = "Australia East"
    terraform apply
    ```
 
+![Function App Testing](images/SCR-20250805-pywo.png)
+
 ## Application Deployment
 
 No application is deployed by default. You can deploy the sample .NET application using the provided ZIP file:
