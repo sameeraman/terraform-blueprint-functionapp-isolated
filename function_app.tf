@@ -11,28 +11,28 @@ resource "azurerm_storage_account" "stg1" {
 
 
 
-#   # Allow access from the Function App subnet
-#   network_rules {
-#     default_action             = "Deny"
-#     virtual_network_subnet_ids = [
-#       "/subscriptions/d52efbb5-d6ec-4788-adf1-735b0fd5d3e4/resourceGroups/cts-aue1-prd-rg-spoke1/providers/Microsoft.Network/virtualNetworks/cts-aue1-prd-vnet-spoke1/subnets/appservice"
-#     ]
-#   }
+  #   # Allow access from the Function App subnet
+  #   network_rules {
+  #     default_action             = "Deny"
+  #     virtual_network_subnet_ids = [
+  #       "/subscriptions/d52efbb5-d6ec-4788-adf1-735b0fd5d3e4/resourceGroups/cts-aue1-prd-rg-spoke1/providers/Microsoft.Network/virtualNetworks/cts-aue1-prd-vnet-spoke1/subnets/appservice"
+  #     ]
+  #   }
 }
 
 resource "azurerm_service_plan" "appsp1" {
   name                = "sp-func-app-service-plan"
   location            = var.location
   resource_group_name = module.rg1.name
-  os_type             = "Linux"  # or "Windows" depending on your needs
-  sku_name           = "P0v3"     # Changed from nested sku block
+  os_type             = "Linux" # or "Windows" depending on your needs
+  sku_name            = "P0v3"  # Changed from nested sku block
 }
 
 resource "azurerm_linux_function_app" "functionapp1" {
   name                       = "sp-func-app-235"
   location                   = var.location
   resource_group_name        = module.rg1.name
-  service_plan_id           = azurerm_service_plan.appsp1.id  # Changed from app_service_plan_id
+  service_plan_id            = azurerm_service_plan.appsp1.id # Changed from app_service_plan_id
   storage_account_name       = azurerm_storage_account.stg1.name
   storage_account_access_key = azurerm_storage_account.stg1.primary_access_key
 
@@ -42,14 +42,14 @@ resource "azurerm_linux_function_app" "functionapp1" {
 
   site_config {
     vnet_route_all_enabled = true
-    always_on = true 
+    always_on              = true
     # You may need to specify additional site_config settings like:
     # application_stack {
     #   python_version = "3.9"  # or your preferred Python version
     # }
-        # .NET Core on Linux
+    # .NET Core on Linux
     application_stack {
-      dotnet_version =  "8.0"  # or "6.0" for .NET 6
+      dotnet_version              = "8.0" # or "6.0" for .NET 6
       use_dotnet_isolated_runtime = true  # Use .NET isolated runtime, need isolated run time for dotnet core on linux
       # other settings
     }
@@ -57,10 +57,10 @@ resource "azurerm_linux_function_app" "functionapp1" {
 
   # Configure app settings for private endpoints
   app_settings = {
-    "FUNCTIONS_WORKER_RUNTIME"               = "dotnet-isolated"  # Added missing setting
-    "FUNCTIONS_EXTENSION_VERSION"            = "~4"  
+    "FUNCTIONS_WORKER_RUNTIME" = "dotnet-isolated" # Added missing setting
+    "FUNCTIONS_EXTENSION_VERSION" = "~4"
     #"WEBSITE_CONTENTOVERVNET"                = "1"
-    #"WEBSITE_VNET_ROUTE_ALL"                 = "1"
+    # "WEBSITE_VNET_ROUTE_ALL" = "1"
     #"WEBSITE_DNS_SERVER"                     = "168.63.129.16"
     #"WEBSITE_CONTENTAZUREFILECONNECTIONSTRING" = "DefaultEndpointsProtocol=https;AccountName=${azurerm_storage_account.stg1.name};AccountKey=${azurerm_storage_account.stg1.primary_access_key};EndpointSuffix=core.windows.net"
   }
@@ -71,6 +71,12 @@ resource "azurerm_linux_function_app" "functionapp1" {
     azurerm_private_endpoint.storage_table_pe,
     azurerm_private_endpoint.storage_queue_pe
   ]
+
+  lifecycle {
+    ignore_changes = [
+      virtual_network_subnet_id,
+    ]
+  }
 }
 
 
@@ -89,8 +95,11 @@ resource "azurerm_private_endpoint" "functionapp_pe" {
   }
 
   private_dns_zone_group {
-    name                 = "azurewebsites-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.azurewebsites.id]
+    name = "azurewebsites-dns-zone-group"
+    private_dns_zone_ids = [
+      data.azurerm_private_dns_zone.azurewebsites.id,
+      data.azurerm_private_dns_zone.azurewebsites_scm.id # Add SCM DNS zone
+    ]
   }
 }
 
@@ -98,6 +107,7 @@ resource "azurerm_private_endpoint" "functionapp_pe" {
 resource "azurerm_app_service_virtual_network_swift_connection" "func_vnet_integration" {
   app_service_id = azurerm_linux_function_app.functionapp1.id
   subnet_id      = data.azurerm_subnet.vnet_appservice_subnet.id
+
 }
 
 
@@ -138,6 +148,11 @@ data "azurerm_private_dns_zone" "storage_queue" {
 
 data "azurerm_private_dns_zone" "azurewebsites" {
   name                = "privatelink.azurewebsites.net"
+  resource_group_name = var.dns_resource_group_name
+}
+
+data "azurerm_private_dns_zone" "azurewebsites_scm" {
+  name                = "scm.privatelink.azurewebsites.net"
   resource_group_name = var.dns_resource_group_name
 }
 

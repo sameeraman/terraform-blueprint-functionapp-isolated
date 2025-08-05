@@ -111,10 +111,7 @@ location = "Australia East"
 No application is deployed by default. You can deploy the sample .NET application using the provided ZIP file:
 
 ```bash
-az functionapp deployment source config-zip \
-  --resource-group cts-aue1-prd-rg-functionapp1 \
-  --name sp-func-app-235 \
-  --src sample_app/function-app.zip
+az functionapp deployment source config-zip --resource-group cts-aue1-prd-rg-functionapp1 --name sp-func-app-235 --src sample_app/function-app.zip
 ```
 
 ## Testing
